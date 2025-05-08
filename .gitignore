@@ -1,9 +1,0 @@
-/node_modules/
-/public/build/
-.firebaserc
-firebase.json
-
-.DS_Store
-
-# Local Netlify folder
-.netlify
