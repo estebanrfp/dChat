@@ -70,7 +70,7 @@ A minimalist, real-time chat application built with HTML, CSS, and GraphDB in va
 
 This example project is for demonstration purposes. If based on a specific repository, refer to its license. Otherwise, consider it under a permissive license like MIT if you are distributing it.
 
-[dChat Demo](https://dChat.com/) Powered by [GraphDB (GDB)](https://github.com/estebanrfp/gdb)
+[dChat Demo](https://estebanrfp.github.io/dChat/) Powered by [GraphDB (GDB)](https://github.com/estebanrfp/gdb)
 
 -------------
 
