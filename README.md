@@ -63,8 +63,7 @@ A minimalist, real-time chat application built with HTML, CSS, and GraphDB in va
 
 ## Demo
 
-*(If you host this example, you can add a link here, e.g., on GitHub Pages)*
-<!-- Example: You can view a live demo of the application at: [GitHub Pages Link] -->
+[dChat Demo](https://estebanrfp.github.io/dChat/)
 
 ## License
 
