@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphDB Minimalist Chat V2</title>
+    <style>
+        /* ... (TODO EL CSS ANTERIOR PERMANECE EXACTAMENTE IGUAL HASTA AQUÍ) ... */
+        :root {
+            /* Light Theme (default) */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7f7f8;
+            --bg-input: #ffffff;
+            --text-primary: #202123;
+            --text-secondary: #6e6e80;
+            --text-user-message: #ffffff; /* Texto en burbuja de usuario */
+            --border-color: #e5e5e5;
+            --accent-color: #10a37f; /* Verde similar a ChatGPT */
+            --accent-text-color: #ffffff;
+            --message-user-bg: var(--accent-color);
+            --message-other-bg: #f0f0f0;
+            --icon-color: #6e6e80;
+            --icon-hover-bg: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode {
+            /* Dark Theme */
+            --bg-primary: #202123; /* Fondo principal oscuro */
+            --bg-secondary: #343541; /* Fondo de mensajes y área de input */
+            --bg-input: #40414f; /* Fondo del input de texto */
+            --text-primary: #ececf1;
+            --text-secondary: #a9a9b3;
+            --text-user-message: #ececf1; /* Texto en burbuja de usuario */
+            --border-color: #565869;
+            --accent-color: #10a37f; /* Mantenemos el acento, o podría cambiar */
+            --accent-text-color: #ffffff;
+            --message-user-bg: #2b574e; /* Un verde más oscuro para dark mode */
+            --message-other-bg: #444654;
+            --icon-color: #a9a9b3;
+            --icon-hover-bg: #565869;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Söhne", "Helvetica Neue", Helvetica, Arial, sans-serif; /* Similar a ChatGPT */
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #chat-app {
+            background-color: var(--bg-secondary);
+            width: 100%;
+            max-width: 800px; /* Un poco más ancho */
+            height: 90vh;
+            max-height: 850px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 20px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        #chat-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-primary); /* Encabezado un poco diferente */
+        }
+        #user-info-header { display: flex; align-items: center; gap: 10px; }
+        #user-info-header input#who {
+            padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px;
+            font-size: 0.9rem; background-color: var(--bg-input); color: var(--text-primary);
+        }
+        #user-info-header input#who:disabled { background-color: transparent; border-color: transparent; font-weight: 500; }
+        #user-info-header button {
+            padding: 8px 10px; border: none; border-radius: 6px; background-color: var(--accent-color);
+            color: var(--accent-text-color); cursor: pointer; font-size: 0.85rem; transition: opacity 0.2s;
+        }
+        #user-info-header button:hover { opacity: 0.85; }
+        
+        #theme-toggle-btn { background: none; border:none; cursor:pointer; padding: 5px; color: var(--icon-color); }
+        #theme-toggle-btn svg { width:20px; height:20px; fill:currentColor; }
+
+
+        #messages-list {
+            flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px;
+        }
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%; /* Más ancho para una apariencia menos de "burbuja" */
+        }
+        .message-item.user { align-self: flex-end; }
+        .message-item.other { align-self: flex-start; }
+
+        .message-sender {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .message-item.user .message-sender { text-align: right; }
+
+        .message-content-wrapper {
+            padding: 12px 16px;
+            border-radius: 8px; /* Menos redondeado */
+            line-height: 1.5;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+        }
+        .message-item.user .message-content-wrapper {
+            background-color: var(--message-user-bg);
+            color: var(--text-user-message);
+        }
+        .message-item.other .message-content-wrapper {
+            background-color: var(--message-other-bg);
+            color: var(--text-primary);
+        }
+        
+        .message-image-container {
+            width: 220px; /* Ancho fijo para todas las imágenes */
+            height: 160px; /* Alto fijo para todas las imágenes */
+            overflow: hidden; /* Importante con object-fit: cover */
+            border-radius: 6px;
+            margin-top: 5px;
+            background-color: var(--message-other-bg); /* Fondo mientras carga o si falla */
+            cursor: zoom-in; /* Sugiere que se puede ampliar */
+        }
+        .message-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cubre el contenedor, puede recortar */
+            display: block;
+        }
+
+        #message-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-primary); /* Diferente del chat list para separación */
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        #input-actions { display: flex; gap: 8px; }
+        .action-btn {
+            background: none; border: 1px solid var(--border-color);
+            color: var(--icon-color);
+            cursor: pointer; padding: 8px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .action-btn:hover { background-color: var(--icon-hover-bg); }
+        .action-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+        #message-form { display: flex; gap: 10px; align-items: center; }
+        #message-form input#what {
+            flex-grow: 1; padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background-color: var(--bg-input);
+            color: var(--text-primary);
+            resize: none;
+        }
+        #message-form input#what:focus {
+            outline: none; border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 20%, transparent);
+        }
+        #message-form input[type="submit"] {
+            padding: 12px 18px; border: none; border-radius: 8px;
+            background-color: var(--accent-color); color: var(--accent-text-color);
+            font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: opacity 0.2s;
+        }
+        #message-form input[type="submit"]:hover { opacity: 0.85; }
+
+        emoji-picker {
+            position: absolute;
+            bottom: 90px; /* Ajustar según altura del input area */
+            right: 20px;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border-radius: 8px;
+        }
+        body.dark-mode emoji-picker { /* El componente emoji-picker-element tiene un atributo 'theme' */ }
+
+        /* Scrollbar */
+        #messages-list::-webkit-scrollbar { width: 8px; }
+        #messages-list::-webkit-scrollbar-track { background: transparent; }
+        #messages-list::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--text-secondary) 40%, transparent); border-radius: 10px; }
+        #messages-list::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--text-secondary) 60%, transparent); }
+
+        /* Modal para imagen */
+        #image-modal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            z-index: 2000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.85); /* Fondo oscuro semi-transparente */
+            justify-content: center;
+            align-items: center;
+        }
+        #image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            display: block;
+            margin: auto;
+            border-radius: 4px;
+            animation: zoomIn 0.3s ease-out;
+        }
+        @keyframes zoomIn {
+            from {transform: scale(0.8); opacity: 0;}
+            to {transform: scale(1); opacity: 1;}
+        }
+        #image-modal-close {
+            position: absolute;
+            top: 20px; right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        #image-modal-close:hover { color: #bbb; }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            body { padding: 0; }
+            #chat-app { height: 100vh; max-height: 100vh; border-radius: 0; border-left:0; border-right:0; }
+            #messages-list { gap: 15px; padding: 15px; }
+            .message-item { max-width: 90%; }
+            #chat-header, #message-input-area { padding: 10px 15px; }
+            emoji-picker { bottom: 80px; right: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-app">
+        <!-- ... (HTML del header, messages-list, input-area SIN CAMBIOS) ... -->
+        <div id="chat-header">
+            <div id="user-info-header">
+                <input id='who' placeholder='Tu nombre'>
+                <button id='change-user-btn' style="display:none;">Cambiar</button>
+            </div>
+            <button id="theme-toggle-btn" title="Alternar tema">
+                <svg id="theme-icon-sun" viewBox="0 0 24 24" style="display:none;"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.64 5.64c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.06 1.06c.39.39 1.02.39 1.41 0s.39-1.02 0-1.41L5.64 5.64zm12.72 12.72c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l1.06 1.06c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-1.06-1.06zM5.64 18.36l-1.06-1.06c-.39-.39-.39-1.02 0-1.41s1.02-.39 1.41 0l1.06 1.06c.39.39.39 1.02 0 1.41s-1.02.39-1.41 0zm12.72-12.72l-1.06-1.06c-.39-.39-.39-1.02 0-1.41s1.02-.39 1.41 0l1.06 1.06c.39.39.39 1.02 0 1.41s-1.02.39-1.41 0z"/></svg>
+                <svg id="theme-icon-moon" viewBox="0 0 24 24"><path d="M10 2c-1.82 0-3.53.5-5 1.35C7.99 5.08 10 8.3 10 12s-2.01 6.92-5 8.65C6.47 21.5 8.18 22 10 22c5.52 0 10-4.48 10-10S15.52 2 10 2z"/></svg>
+            </button>
+        </div>
+        <ul id='messages-list'></ul>
+        <div id="message-input-area">
+            <div id="input-actions">
+                <button id="emoji-btn" class="action-btn" title="Emojis">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2.5-6.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm5 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm-2.5-4.5C13.66 7.5 15 8.84 15 10.5h-2c0-.83-.67-1.5-1.5-1.5S10 9.67 10 10.5H8c0-1.66 1.34-3 3-3z"/></svg>
+                </button>
+                <button id="image-upload-btn" class="action-btn" title="Subir imagen">
+                     <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6.01 12L9 12.01l-2.01 2.01H6V6h12v9.02h-2.99zM12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </button>
+                <input type="file" id="image-file-input" accept="image/*" style="display: none;">
+            </div>
+            <form id='message-form'>
+                <input id='what' placeholder='Enviar un mensaje...'>
+                <input type='submit' value='Enviar'>
+            </form>
+        </div>
+        <emoji-picker style="display:none;"></emoji-picker>
+    </div>
+
+    <!-- Modal para Imagen -->
+    <div id="image-modal" style="display: none;">
+        <span id="image-modal-close">×</span>
+        <img id="modal-image-content">
+    </div>
+
+<script type="module">
+    // ... (IMPORTS y CONSTANTES como antes) ...
+    import { GraphDB } from "https://cdn.jsdelivr.net/npm/gdb-p2p@0/+esm";
+    import 'https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js';
+
+    const DB_NAME = 'chat-minimalist-db-v2'; // Cambiado para evitar conflictos si hay datos viejos
+    const USERNAME_STORAGE_KEY = 'chatMinimalistUsernameV2';
+    const THEME_STORAGE_KEY = 'chatMinimalistThemeV2';
+    const MESSAGE_TYPE = 'chat-message-v6'; // Nueva versión
+
+    let db = new GraphDB(DB_NAME);
+    let currentUser = null;
+    let initialMessagesLoaded = false; // Bandera para el scroll inicial
+
+    const messagesListElement = document.getElementById('messages-list');
+    const messageFormElement = document.getElementById('message-form');
+    const whoInput = document.getElementById('who');
+    const whatInput = document.getElementById('what');
+    const changeUserBtn = document.getElementById('change-user-btn');
+    
+    const emojiBtn = document.getElementById('emoji-btn');
+    const emojiPicker = document.querySelector('emoji-picker');
+    const imageUploadBtn = document.getElementById('image-upload-btn');
+    const imageFileInput = document.getElementById('image-file-input');
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const themeIconSun = document.getElementById('theme-icon-sun');
+    const themeIconMoon = document.getElementById('theme-icon-moon');
+
+    // Modal de imagen
+    const imageModal = document.getElementById('image-modal');
+    const modalImageContent = document.getElementById('modal-image-content');
+    const imageModalCloseBtn = document.getElementById('image-modal-close');
+
+    function applyTheme(theme) { /* ... (sin cambios) ... */
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIconSun.style.display = 'block';
+            themeIconMoon.style.display = 'none';
+            emojiPicker.setAttribute('theme', 'dark');
+        } else {
+            document.body.classList.remove('dark-mode');
+            themeIconSun.style.display = 'none';
+            themeIconMoon.style.display = 'block';
+            emojiPicker.setAttribute('theme', 'light');
+        }
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }
+    themeToggleBtn.addEventListener('click', () => { /* ... (sin cambios) ... */
+        const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+        applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+    function loadUser() { /* ... (sin cambios) ... */
+        const storedUser = localStorage.getItem(USERNAME_STORAGE_KEY);
+        if (storedUser) {
+            currentUser = storedUser;
+            whoInput.value = currentUser;
+            whoInput.disabled = true;
+            changeUserBtn.style.display = 'inline-block';
+            whatInput.focus();
+        } else {
+            whoInput.disabled = false;
+            changeUserBtn.style.display = 'none';
+            whoInput.focus();
+        }
+    }
+    function setUser(username) { /* ... (sin cambios) ... */
+        currentUser = username.trim();
+        if (currentUser) {
+            localStorage.setItem(USERNAME_STORAGE_KEY, currentUser);
+            whoInput.value = currentUser;
+            whoInput.disabled = true;
+            changeUserBtn.style.display = 'inline-block';
+            whatInput.focus();
+        }
+    }
+    changeUserBtn.onclick = () => { /* ... (sin cambios) ... */
+        localStorage.removeItem(USERNAME_STORAGE_KEY);
+        currentUser = null;
+        whoInput.value = '';
+        whoInput.disabled = false;
+        changeUserBtn.style.display = 'none';
+        whoInput.focus();
+        if (emojiPicker.style.display !== 'none') emojiPicker.style.display = 'none';
+    };
+
+    function scrollToBottom(force = false) {
+        if (force || !initialMessagesLoaded || (messagesListElement.scrollHeight - messagesListElement.clientHeight <= messagesListElement.scrollTop + 150) ) {
+            messagesListElement.scrollTop = messagesListElement.scrollHeight;
+        }
+    }
+
+    // Suscripción a GraphDB
+    db.map({
+        query: { type: MESSAGE_TYPE },
+        field: 'timestamp', order: 'asc', realtime: true
+    }, ({ id, value, action }, allData) => { // allData es un array con todos los datos actuales
+        if (action === 'remove') {
+            document.getElementById(id)?.remove();
+            return;
+        }
+        if (!value || !value.content || typeof value.sender === 'undefined') return;
+
+        let messageLi = document.getElementById(id);
+        let isNewMessage = false;
+        if (!messageLi) {
+            isNewMessage = true;
+            messageLi = document.createElement("li");
+            messageLi.id = id;
+            messageLi.className = 'message-item';
+            
+            const senderElement = document.createElement('div');
+            senderElement.className = 'message-sender';
+            
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'message-content-wrapper';
+
+            messageLi.appendChild(senderElement);
+            messageLi.appendChild(contentWrapper);
+            messagesListElement.appendChild(messageLi);
+        }
+        
+        const senderEl = messageLi.querySelector('.message-sender');
+        const contentWrapperEl = messageLi.querySelector('.message-content-wrapper');
+        
+        senderEl.textContent = value.sender;
+        contentWrapperEl.innerHTML = '';
+
+        if (value.content.type === 'text') {
+            const textNode = document.createTextNode(value.content.value);
+            contentWrapperEl.appendChild(textNode);
+        } else if (value.content.type === 'image') {
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'message-image-container';
+            const imgElement = document.createElement('img');
+            imgElement.src = value.content.value;
+            imgElement.alt = value.content.filename || 'Imagen';
+            imgElement.onclick = () => showFullImage(value.content.value); // Evento para modal
+            imgContainer.appendChild(imgElement);
+            contentWrapperEl.appendChild(imgContainer);
+        }
+
+        messageLi.classList.toggle('user', currentUser && value.sender === currentUser);
+        messageLi.classList.toggle('other', !currentUser || value.sender !== currentUser);
+        
+        // Scroll
+        if (isNewMessage) {
+            scrollToBottom();
+        }
+
+        // Cuando todos los mensajes iniciales han sido procesados por map
+        if (!initialMessagesLoaded && allData && allData.length > 0 && messagesListElement.children.length >= allData.length) {
+            // Podríamos necesitar un pequeño delay para asegurar que el DOM está completamente renderizado
+            setTimeout(() => {
+                scrollToBottom(true); // Forzar scroll al final
+                initialMessagesLoaded = true;
+            }, 100); // Ajustar delay si es necesario
+        } else if (!initialMessagesLoaded && (!allData || allData.length === 0)) {
+            // No hay mensajes, marcar como cargados
+            initialMessagesLoaded = true;
+        }
+    });
+
+    async function sendMessage(content) { /* ... (sin cambios) ... */
+        if (!currentUser) { alert("Establece tu nombre primero."); whoInput.focus(); return; }
+        const messageData = { type: MESSAGE_TYPE, sender: currentUser, content: content, timestamp: Date.now() };
+        try {
+            await db.put(messageData);
+            whatInput.value = ""; whatInput.focus();
+        } catch (error) { console.error("Error enviando:", error); alert("Error enviando."); }
+    }
+
+    messageFormElement.onsubmit = async (event) => { /* ... (sin cambios) ... */
+        event.preventDefault();
+        const senderName = whoInput.value.trim(); const messageText = whatInput.value.trim();
+        if (!senderName) { alert("Ingresa tu nombre."); whoInput.focus(); return; }
+        if (!messageText) { whatInput.focus(); return; }
+        if (!currentUser || currentUser !== senderName) { setUser(senderName); }
+        sendMessage({ type: 'text', value: messageText });
+    };
+
+    // Emojis & Imagen (lógica sin cambios)
+    emojiBtn.addEventListener('click', () => { /* ... */
+        emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
+    });
+    emojiPicker.addEventListener('emoji-click', event => { /* ... */
+        whatInput.value += event.detail.unicode;
+        emojiPicker.style.display = 'none'; whatInput.focus();
+    });
+    document.addEventListener('click', (event) => { /* ... */
+        if (!emojiBtn.contains(event.target) && !emojiPicker.contains(event.target) && emojiPicker.style.display !== 'none') {
+            emojiPicker.style.display = 'none';
+        }
+    });
+    imageUploadBtn.addEventListener('click', () => imageFileInput.click() );
+    imageFileInput.addEventListener('change', (event) => { /* ... */
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const senderName = whoInput.value.trim();
+                if (!senderName) { alert("Ingresa tu nombre antes de subir imagen."); whoInput.focus(); imageFileInput.value = ''; return; }
+                if (!currentUser || currentUser !== senderName) { setUser(senderName); }
+                sendMessage({ type: 'image', value: e.target.result, filename: file.name });
+                imageFileInput.value = '';
+            };
+            reader.readAsDataURL(file);
+        } else if (file) { alert("Archivo de imagen no válido."); imageFileInput.value = ''; }
+    });
+
+    // Funciones para el modal de imagen
+    function showFullImage(src) {
+        modalImageContent.src = src;
+        imageModal.style.display = 'flex'; // Usar flex para centrar
+    }
+    imageModalCloseBtn.onclick = () => {
+        imageModal.style.display = 'none';
+        modalImageContent.src = ''; // Limpiar para liberar memoria
+    }
+    // Cerrar modal al hacer clic fuera de la imagen
+    imageModal.onclick = (event) => {
+        if (event.target === imageModal) { // Si el clic es en el fondo del modal
+            imageModal.style.display = 'none';
+            modalImageContent.src = '';
+        }
+    }
+
+    // Inicialización
+    const preferredTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+    applyTheme(preferredTheme);
+    loadUser();
+    // db.clear().then(() => { console.log('DB cleared'); location.reload(); });
+</script>
+</body>
+</html>
