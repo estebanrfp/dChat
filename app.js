@@ -1,4 +1,4 @@
-import { GraphDB } from "https://cdn.jsdelivr.net/npm/gdb-p2p@0/+esm";
+import { GraphDB } from "https://cdn.jsdelivr.net/npm/gdb-p2p/+esm";
 import 'https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js';
 
 const DB_NAME = 'chat-minimalist-db-v3';
