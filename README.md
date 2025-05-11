@@ -74,4 +74,4 @@ This example project is for demonstration purposes. If based on a specific repos
 -------------
 
 #### Credits
-* [by estebanrfp](https://github.com/estebanrfp)
+[by Esteban Fuster Pozzi (estebanrfp)](https://github.com/estebanrfp)
