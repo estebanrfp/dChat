@@ -16,13 +16,13 @@ A minimalist, real-time chat application built with HTML, CSS, and GraphDB in va
     - Light and Dark mode, thème-toggleable and persisted.
     - Fully responsive for desktop and mobile devices.
 - **Persistent Chat History**: All messages are stored locally using GraphDB, so history is preserved on refresh.
-- **P2P Foundation**: Built on `GraphDB`, suggesting potential for direct peer-to-peer data synchronization (details depend on `GraphDB`'s P2P layer implementation).
+- **P2P Foundation**: Built on `GenosDB`, suggesting potential for direct peer-to-peer data synchronization (details depend on `GenosDB`'s P2P layer implementation).
 
-## Advantages of Using GraphDB (`GraphDB`)
+## Advantages of Using GraphDB (`GenosDB`)
 
 - **Simplicity**: Easy-to-use API (`put`, `get`, `map`) for data manipulation and real-time updates.
 - **Real-time Capabilities**: The `map` method with a callback enables effortless real-time data synchronization, perfect for applications like chat.
-- **Local-First & Persistence**: Data is stored locally (likely using IndexedDB via `localStorage` or similar by `GraphDB`), ensuring data persistence and offline-first potential.
+- **Local-First & Persistence**: Data is stored locally (likely using IndexedDB via `localStorage` or similar by `GenosDB`), ensuring data persistence and offline-first potential.
 - **P2P Potential**: The "p2p" naturaleza of the library suggests it can handle direct data synchronization between peers without a centralized server, reducing infrastructure costs and complexity for certain use cases.
 - **Schemaless Nature**: Flexible data storage, ideal for evolving applications or varied data types like text and Base64 images in chat messages.
 - **No Backend Required (for core P2P)**: For basic P2P functionality, GraphDB can operate without a dedicated server backend, simplifying deployment for demos and small-scale apps.
@@ -32,7 +32,7 @@ A minimalist, real-time chat application built with HTML, CSS, and GraphDB in va
 - HTML5
 - CSS3 (with CSS Variables for theming)
 - JavaScript (ES6+ Modules)
-- **GraphDB (`gdb`)**: For data storage, real-time updates, and P2P communication.
+- **GenosDB (`gdb`)**: For data storage, real-time updates, and P2P communication.
 - **`emoji-picker-element`**: For emoji selection.
 - `localStorage`: For user preferences (username, theme).
 
@@ -53,7 +53,7 @@ A minimalist, real-time chat application built with HTML, CSS, and GraphDB in va
     *   Open the URL provided by your local server (e.g., `http://localhost:3000` or `http://localhost:5000`).
 4.  **Start Chatting**:
     *   Set your username.
-    *   Open another browser tab/window (or another device on the same network, if `gdb-p2p` P2P layer supports it) to the same URL to simulate another user.
+    *   Open another browser tab/window (or another device on the same network, if `genosdb` P2P layer supports it) to the same URL to simulate another user.
     *   Messages, images, and emojis should sync in real-time.
 
 ## Project Structure
@@ -69,7 +69,7 @@ A minimalist, real-time chat application built with HTML, CSS, and GraphDB in va
 
 This example project is for demonstration purposes. If based on a specific repository, refer to its license. Otherwise, consider it under a permissive license like MIT if you are distributing it.
 
-[dChat Demo](https://estebanrfp.github.io/dChat/) Powered by [GraphDB (GDB)](https://github.com/estebanrfp/gdb)
+[dChat Demo](https://estebanrfp.github.io/dChat/) Powered by [GenosDB (GDB)](https://github.com/estebanrfp/gdb)
 
 -------------
 
