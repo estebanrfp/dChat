@@ -1,4 +1,4 @@
-import { GraphDB } from "https://cdn.jsdelivr.net/npm/gdb-p2p/+esm";
+import { GDB } from "https://cdn.jsdelivr.net/npm/gdb-p2p/+esm";
 import 'https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js';
 
 const DB_NAME = 'chat-minimalist-db-v3';
@@ -6,7 +6,7 @@ const USERNAME_STORAGE_KEY = 'chatMinimalistUsernameV3';
 const THEME_STORAGE_KEY = 'chatMinimalistThemeV3';
 const MESSAGE_TYPE = 'chat-message-v7'; // Asegúrate que esta sea la constante correcta
 
-let db = new GraphDB(DB_NAME);
+let db = new GDB(DB_NAME);
 let currentUser = null;
 let initialLoadScrollTimer = null;
 
