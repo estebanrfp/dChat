@@ -1,6 +1,6 @@
-# GraphDB Real-time Chat
+# GenosDB Real-time Chat
 
-A minimalist, real-time chat application built with HTML, CSS, and GraphDB in vanilla JavaScript. It showcases modern P2P communication capabilities with a sleek, responsive design.
+A minimalist, real-time chat application built with HTML, CSS, and GenosDB in vanilla JavaScript. It showcases modern P2P communication capabilities with a sleek, responsive design.
 
 ## Features
 
@@ -8,24 +8,24 @@ A minimalist, real-time chat application built with HTML, CSS, and GraphDB in va
 - **User Identification**: Set a username that persists across sessions using `localStorage`.
 - **Rich Content**:
     - Send text messages.
-    - Share images (converted to Base64 and stored in GraphDB).
+    - Share images (converted to Base64 and stored in GenosDB).
     - Insert emojis using an integrated emoji picker.
 - **Image Previews & Modal**: Images are displayed as fixed-size thumbnails and can be viewed obstáculos en un modal.
 - **Modern & Responsive UI**:
     - Clean, minimalist design inspired by modern chat applications.
     - Light and Dark mode, thème-toggleable and persisted.
     - Fully responsive for desktop and mobile devices.
-- **Persistent Chat History**: All messages are stored locally using GraphDB, so history is preserved on refresh.
+- **Persistent Chat History**: All messages are stored locally using GenosDB, so history is preserved on refresh.
 - **P2P Foundation**: Built on `GenosDB`, suggesting potential for direct peer-to-peer data synchronization (details depend on `GenosDB`'s P2P layer implementation).
 
-## Advantages of Using GraphDB (`GenosDB`)
+## Advantages of Using GenosDB (`GenosDB`)
 
 - **Simplicity**: Easy-to-use API (`put`, `get`, `map`) for data manipulation and real-time updates.
 - **Real-time Capabilities**: The `map` method with a callback enables effortless real-time data synchronization, perfect for applications like chat.
 - **Local-First & Persistence**: Data is stored locally (likely using IndexedDB via `localStorage` or similar by `GenosDB`), ensuring data persistence and offline-first potential.
 - **P2P Potential**: The "p2p" naturaleza of the library suggests it can handle direct data synchronization between peers without a centralized server, reducing infrastructure costs and complexity for certain use cases.
 - **Schemaless Nature**: Flexible data storage, ideal for evolving applications or varied data types like text and Base64 images in chat messages.
-- **No Backend Required (for core P2P)**: For basic P2P functionality, GraphDB can operate without a dedicated server backend, simplifying deployment for demos and small-scale apps.
+- **No Backend Required (for core P2P)**: For basic P2P functionality, GenosDB can operate without a dedicated server backend, simplifying deployment for demos and small-scale apps.
 
 ## Technologies Used
 
