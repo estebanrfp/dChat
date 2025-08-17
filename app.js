@@ -1,15 +1,18 @@
-import { GDB } from "https://cdn.jsdelivr.net/npm/genosdb/+esm";
+import { gdb } from "https://cdn.jsdelivr.net/npm/genosdb@latest/dist/index.min.js";
 import 'https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js';
 
+// --- Constantes de configuración ---
 const DB_NAME = 'chat-minimalist-db-v3';
 const USERNAME_STORAGE_KEY = 'chatMinimalistUsernameV3';
 const THEME_STORAGE_KEY = 'chatMinimalistThemeV3';
 const MESSAGE_TYPE = 'chat-message-v7'; // Asegúrate que esta sea la constante correcta
 
-let db = new GDB(DB_NAME);
+// --- Global variables ---
+let db;
 let currentUser = null;
 let initialLoadScrollTimer = null;
 
+// --- Elementos del DOM ---
 const messagesListElement = document.getElementById('messages-list');
 const messageFormElement = document.getElementById('message-form');
 const whoInput = document.getElementById('who');
@@ -28,7 +31,9 @@ const imageModal = document.getElementById('image-modal');
 const modalImageContent = document.getElementById('modal-image-content');
 const imageModalCloseBtn = document.getElementById('image-modal-close');
 
-function applyTheme(theme) {
+
+
+const applyTheme = (theme) => {
   if (theme === 'dark') {
     document.body.classList.add('dark-mode');
     themeIconSun.style.display = 'block';
@@ -41,14 +46,14 @@ function applyTheme(theme) {
     emojiPicker.setAttribute('theme', 'light');
   }
   localStorage.setItem(THEME_STORAGE_KEY, theme);
-}
+};
 
 themeToggleBtn.addEventListener('click', () => {
   const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
   applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
 });
 
-function loadUser() {
+const loadUser = () => {
   const storedUser = localStorage.getItem(USERNAME_STORAGE_KEY);
   if (storedUser) {
     currentUser = storedUser;
@@ -61,9 +66,9 @@ function loadUser() {
     changeUserBtn.style.display = 'none';
     whoInput.focus();
   }
-}
+};
 
-function setUser(username) {
+const setUser = (username) => {
   currentUser = username.trim();
   if (currentUser) {
     localStorage.setItem(USERNAME_STORAGE_KEY, currentUser);
@@ -72,7 +77,7 @@ function setUser(username) {
     changeUserBtn.style.display = 'inline-block';
     whatInput.focus();
   }
-}
+};
 
 changeUserBtn.onclick = () => {
   localStorage.removeItem(USERNAME_STORAGE_KEY);
@@ -84,17 +89,17 @@ changeUserBtn.onclick = () => {
   if (emojiPicker.style.display !== 'none') emojiPicker.style.display = 'none';
 };
 
-function scrollToBottom(force = false) {
+const scrollToBottom = (force = false) => {
   if (force || initialLoadScrollTimer || (messagesListElement.scrollHeight - messagesListElement.clientHeight <= messagesListElement.scrollTop + 150)) {
     messagesListElement.scrollTop = messagesListElement.scrollHeight;
   }
-}
+};
 
-// Función para renderizar o actualizar un mensaje en la UI
-function renderOrUpdateMessage(id, value, isCurrentUserMessage) {
-  // Asegurarse de que value y value.content existen antes de acceder a sus propiedades
+// Function to render or update a message in the UI
+const renderOrUpdateMessage = (id, value, isCurrentUserMessage) => {
+  // Ensure value and value.content exist before accessing their properties
   if (!value || !value.content || typeof value.sender === 'undefined') {
-    console.warn(`Mensaje con ID ${id} tiene datos incompletos o no es un mensaje válido:`, value);
+    console.warn(`Message with ID ${id} has incomplete data or is not a valid message:`, value);
     return null;
   }
 
@@ -120,7 +125,7 @@ function renderOrUpdateMessage(id, value, isCurrentUserMessage) {
   const contentWrapperEl = messageLi.querySelector('.message-content-wrapper');
 
   senderEl.textContent = value.sender;
-  contentWrapperEl.innerHTML = ''; // Limpiar contenido anterior para actualizaciones
+  contentWrapperEl.innerHTML = ''; // Clear previous content for updates
 
   if (value.content.type === 'text') {
     const textNode = document.createTextNode(value.content.value);
@@ -130,12 +135,12 @@ function renderOrUpdateMessage(id, value, isCurrentUserMessage) {
     imgContainer.className = 'message-image-container';
     const imgElement = document.createElement('img');
     imgElement.src = value.content.value;
-    imgElement.alt = value.content.filename || 'Imagen';
+    imgElement.alt = value.content.filename || 'Image';
     imgElement.onclick = () => showFullImage(value.content.value);
     imgContainer.appendChild(imgElement);
     contentWrapperEl.appendChild(imgContainer);
   } else {
-    const textNode = document.createTextNode(`[Contenido desconocido: ${value.content.type || 'N/A'}]`);
+    const textNode = document.createTextNode(`[Unknown content: ${value.content.type || 'N/A'}]`);
     contentWrapperEl.appendChild(textNode);
   }
 
@@ -143,70 +148,67 @@ function renderOrUpdateMessage(id, value, isCurrentUserMessage) {
   messageLi.classList.toggle('other', !isCurrentUserMessage);
 
   return { messageElement: messageLi, isNew: isNewMessage };
-}
+};
 
-// Callback de db.map modificado
-db.map({
-  query: { type: MESSAGE_TYPE },
-  field: 'timestamp', order: 'asc', realtime: true
-}, ({ id, value, action }) => {
-  // Para depuración, puedes dejarlo o quitarlo una vez que funcione bien
-  // console.log(`Action: ${action}, ID: ${id}, Value:`, value);
+// db.map callback modernized
+const setupDbMap = () => {
+  db.map({
+    query: { type: MESSAGE_TYPE },
+    field: 'timestamp', order: 'asc', realtime: true
+  }, ({ id, value, action }) => {
+    // For debugging, you can leave or remove this once stable
+    // console.log(`Action: ${action}, ID: ${id}, Value:`, value);
 
-  // Es crucial que 'currentUser' esté definido para esta comparación.
-  // 'value' puede ser null o undefined si la acción es 'removed' y la librería no envía el valor.
-  // Sin embargo, para 'initial', 'added', 'updated', 'value' debería estar presente.
-  const isUserMsg = value && currentUser && value.sender === currentUser;
+    // It's crucial that 'currentUser' is defined for this comparison.
+    // 'value' may be null or undefined if the action is 'removed' and the library doesn't send the value.
+    // However, for 'initial', 'added', 'updated', 'value' should be present.
+    const isUserMsg = value && currentUser && value.sender === currentUser;
 
-  if (action === 'initial' || action === 'added') {
-    const rendered = renderOrUpdateMessage(id, value, isUserMsg);
-    if (rendered && rendered.isNew) {
-      messagesListElement.appendChild(rendered.messageElement);
-    }
-    // Si no es nuevo, renderOrUpdateMessage ya lo actualizó.
+    if (action === 'initial' || action === 'added') {
+      const rendered = renderOrUpdateMessage(id, value, isUserMsg);
+      if (rendered && rendered.isNew) {
+        messagesListElement.appendChild(rendered.messageElement);
+      }
+      // If not new, renderOrUpdateMessage already updated it.
 
-    // Lógica de scroll para mensajes nuevos/iniciales
-    clearTimeout(initialLoadScrollTimer);
-    initialLoadScrollTimer = setTimeout(() => {
-      scrollToBottom(true);
-      initialLoadScrollTimer = null;
-    }, 50); // Un pequeño delay para permitir que el DOM se actualice
+      // Scroll logic for new/initial messages
+      clearTimeout(initialLoadScrollTimer);
+      initialLoadScrollTimer = setTimeout(() => {
+        scrollToBottom(true);
+        initialLoadScrollTimer = null;
+      }, 50); // Small delay to allow DOM update
 
-    // Este if puede ser redundante si el timeout siempre hace el scroll
-    // if (!initialLoadScrollTimer) { 
-    //     scrollToBottom(false); 
-    // }
+    } else if (action === 'updated') {
+      renderOrUpdateMessage(id, value, isUserMsg);
+      // No specific scroll needed for 'updated' unless height changes significantly.
 
-  } else if (action === 'updated') {
-    renderOrUpdateMessage(id, value, isUserMsg);
-    // No se necesita scroll específico para 'updated' a menos que cambie la altura significativamente.
-
-  } else if (action === 'removed') {
-    const messageElement = document.getElementById(id);
-    if (messageElement) {
-      messageElement.remove();
-      // console.log(`Mensaje ${id} eliminado de la UI.`);
+    } else if (action === 'removed') {
+      const messageElement = document.getElementById(id);
+      if (messageElement) {
+        messageElement.remove();
+        // console.log(`Message ${id} removed from UI.`);
+      } else {
+        // console.warn(`Attempt to remove message ${id} not found in UI.`);
+      }
     } else {
-      // console.warn(`Intento de eliminar mensaje ${id} no encontrado en la UI.`);
+      console.warn(`Unknown or unhandled action: ${action} for ID: ${id}`);
     }
-  } else {
-    console.warn(`Acción desconocida o no manejada: ${action} para ID: ${id}`);
-  }
-});
+  });
+};
 
-async function sendMessage(content) {
-  if (!currentUser) { alert("Establece tu nombre primero."); whoInput.focus(); return; }
+const sendMessage = async (content) => {
+  if (!currentUser) { alert("Set your name first."); whoInput.focus(); return; }
   const messageData = { type: MESSAGE_TYPE, sender: currentUser, content: content, timestamp: Date.now() };
   try {
-    await db.put(messageData); // gdb-p2p se encarga de generar el ID si no se provee
+    await db.put(messageData); // gdb-p2p generates the ID if not provided
     whatInput.value = ""; whatInput.focus();
-  } catch (error) { console.error("Error enviando mensaje:", error); alert("Error al enviar el mensaje."); }
-}
+  } catch (error) { console.error("Error sending message:", error); alert("Error sending message."); }
+};
 
 messageFormElement.onsubmit = async (event) => {
   event.preventDefault();
   const senderName = whoInput.value.trim(); const messageText = whatInput.value.trim();
-  if (!senderName) { alert("Ingresa tu nombre."); whoInput.focus(); return; }
+  if (!senderName) { alert("Enter your name."); whoInput.focus(); return; }
   if (!messageText) { whatInput.focus(); return; }
   if (!currentUser || currentUser !== senderName) { setUser(senderName); }
   sendMessage({ type: 'text', value: messageText });
@@ -231,34 +233,40 @@ imageFileInput.addEventListener('change', (event) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const senderName = whoInput.value.trim();
-      if (!senderName) { alert("Ingresa tu nombre antes de subir imagen."); whoInput.focus(); imageFileInput.value = ''; return; }
+      if (!senderName) { alert("Enter your name before uploading an image."); whoInput.focus(); imageFileInput.value = ''; return; }
       if (!currentUser || currentUser !== senderName) { setUser(senderName); }
       sendMessage({ type: 'image', value: e.target.result, filename: file.name });
-      imageFileInput.value = ''; // Resetear el input de archivo
+      imageFileInput.value = ''; // Reset file input
     };
     reader.readAsDataURL(file);
-  } else if (file) { alert("Archivo de imagen no válido."); imageFileInput.value = ''; }
+  } else if (file) { alert("Invalid image file."); imageFileInput.value = ''; }
 });
 
-function showFullImage(src) {
+const showFullImage = (src) => {
   modalImageContent.src = src;
   imageModal.style.display = 'flex';
-}
+};
 imageModalCloseBtn.onclick = () => {
   imageModal.style.display = 'none';
   modalImageContent.src = '';
-}
+};
 imageModal.onclick = (event) => {
-  if (event.target === imageModal) { // Cerrar solo si se hace clic en el fondo del modal
+  if (event.target === imageModal) { // Only close if modal background is clicked
     imageModal.style.display = 'none';
     modalImageContent.src = '';
   }
-}
+};
 
-// Carga inicial
-const preferredTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
-applyTheme(preferredTheme);
-loadUser(); // Carga el usuario, lo que define 'currentUser'
+// Initial load and async main logic
+const main = async () => {
+  db = await gdb(DB_NAME);
+  setupDbMap();
+  const preferredTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+  applyTheme(preferredTheme);
+  loadUser(); // Loads the user, which defines 'currentUser'
+};
 
-// Para limpiar la base de datos durante el desarrollo si es necesario:
+main().catch(console.error);
+
+// To clear the database during development if necessary:
 // db.clear().then(() => { console.log('DB cleared'); location.reload(); });
