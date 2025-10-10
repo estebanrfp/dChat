@@ -259,7 +259,7 @@ imageModal.onclick = (event) => {
 
 // Initial load and async main logic
 const main = async () => {
-  db = await gdb(DB_NAME);
+  db = await gdb(DB_NAME, { rtc: true });
   setupDbMap();
   const preferredTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
   applyTheme(preferredTheme);
